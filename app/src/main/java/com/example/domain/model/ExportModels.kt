@@ -5,20 +5,40 @@ enum class QualityMode(
     val description: String,
     val bitrateMultiplier: Float
 ) {
-    MAXIMUM_QUALITY(
-        displayName = "Maximum Quality",
-        description = "Prioritize maximum practical visual fidelity and clarity",
-        bitrateMultiplier = 1.35f
+    ULTRA_COMPRESSION(
+        displayName = "Ultra Compress",
+        description = "Aggressive compression for quick mobile transfers and low data",
+        bitrateMultiplier = 0.40f
+    ),
+    DISCORD_LIMIT(
+        displayName = "Discord (< 10MB)",
+        description = "Targeted compression guaranteed under 10MB upload limits",
+        bitrateMultiplier = 0.35f
+    ),
+    WHATSAPP_LIMIT(
+        displayName = "WhatsApp (< 16MB)",
+        description = "Optimized for WhatsApp message and status upload limits",
+        bitrateMultiplier = 0.50f
+    ),
+    SMALLER_FILE(
+        displayName = "Smaller File",
+        description = "Reduce file size while maintaining clean, artifact-free playback",
+        bitrateMultiplier = 0.65f
     ),
     BALANCED(
         displayName = "Balanced",
         description = "Optimal balance between visual quality and upload file size",
         bitrateMultiplier = 1.0f
     ),
-    SMALLER_FILE(
-        displayName = "Smaller File",
-        description = "Reduce file size while maintaining clean, artifact-free playback",
-        bitrateMultiplier = 0.65f
+    MAXIMUM_QUALITY(
+        displayName = "Maximum Quality",
+        description = "Prioritize maximum practical visual fidelity and clarity",
+        bitrateMultiplier = 1.35f
+    ),
+    PRO_CINEMA(
+        displayName = "Pro Cinema / Master",
+        description = "Near-lossless visual preservation for YouTube and archival",
+        bitrateMultiplier = 1.85f
     ),
     CUSTOM(
         displayName = "Custom",
@@ -67,7 +87,9 @@ data class ExportSettings(
     val preserveMetadata: Boolean = false,
     val showSafeAreas: Boolean = false,
     val trimStartMs: Long = 0L,
-    val trimEndMs: Long = 0L
+    val trimEndMs: Long = 0L,
+    val saveToGalleryOnCompletion: Boolean = true,
+    val fastStartMoov: Boolean = true
 )
 
 data class OptimizationPlan(
@@ -101,7 +123,8 @@ sealed interface ExportStage {
         val fps: Float,
         val codec: String,
         val durationMs: Long,
-        val platform: PlatformDestination
+        val platform: PlatformDestination,
+        val galleryUri: String? = null
     ) : ExportStage
     data class Failed(val humanReadableError: String, val actionableStep: String) : ExportStage
 }

@@ -53,12 +53,13 @@ fun HistoryScreen(
 ) {
     val context = LocalContext.current
     val allProjects by viewModel.allProjects.collectAsState()
+    val compact = com.example.ui.util.LocalCompactConfig.current
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
@@ -70,7 +71,7 @@ fun HistoryScreen(
                 Column {
                     Text(
                         text = "Export History",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = if (compact.isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -182,7 +183,21 @@ fun HistoryScreen(
                             }
 
                             // Actions
-                            Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = {
+                                        project.exportPath?.let { path ->
+                                            val f = File(path)
+                                            if (f.exists()) {
+                                                viewModel.saveVideoToDeviceGallery(f, project.destinationPlatform)
+                                                android.widget.Toast.makeText(context, "Saved to device Gallery (Movies/Optimized)!", android.widget.Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(imageVector = OptimizedIcons.Storage, contentDescription = "Save to Gallery", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                }
                                 IconButton(
                                     onClick = {
                                         project.exportPath?.let { path ->
@@ -192,7 +207,7 @@ fun HistoryScreen(
                                     },
                                     modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(imageVector = OptimizedIcons.Play, contentDescription = "Play", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                    Icon(imageVector = OptimizedIcons.Play, contentDescription = "Play", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                                 }
                                 IconButton(
                                     onClick = {

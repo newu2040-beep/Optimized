@@ -58,23 +58,27 @@ fun SettingsScreen(
     val notifications by viewModel.preferences.notificationsEnabled.collectAsState()
     val removeMetadata by viewModel.preferences.removeMetadata.collectAsState()
     val storageStats by viewModel.storageStats.collectAsState()
+    val compactMode by viewModel.preferences.compactMode.collectAsState()
+    val autoCompact by viewModel.preferences.autoCompactOnSmallScreens.collectAsState()
+    val autoSaveToGallery by viewModel.preferences.autoSaveToGallery.collectAsState()
+    val compact = com.example.ui.util.LocalCompactConfig.current
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
+                style = if (compact.isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Preferences, processing pipelines and storage",
+                text = "Display adaptation, themes, and processing",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -89,12 +93,51 @@ fun SettingsScreen(
             )
         }
 
+        // COMPACT MODE & DISPLAY SCALING
+        item {
+            SettingsSectionCard(title = "Display & Screen Layout", icon = OptimizedIcons.Crop) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Compact Mode", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Dense layout with scaled paddings & buttons for small display phones", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = compactMode,
+                            onCheckedChange = { viewModel.preferences.setCompactMode(it) }
+                        )
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Auto-Resize for Small Displays", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Automatically adapt layout when running on compact screens or split-screen", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = autoCompact,
+                            onCheckedChange = { viewModel.preferences.setAutoCompactOnSmallScreens(it) }
+                        )
+                    }
+                }
+            }
+        }
+
         // APPEARANCE & THEME SELECTOR
         item {
-            SettingsSectionCard(title = "Appearance", icon = OptimizedIcons.Smart) {
+            SettingsSectionCard(title = "Appearance & Themes", icon = OptimizedIcons.Smart) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Theme Palette",
+                        text = "12 Distinct Pro Themes",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -146,8 +189,25 @@ fun SettingsScreen(
 
         // PROCESSING PIPELINE SETTINGS
         item {
-            SettingsSectionCard(title = "Processing & Encoding", icon = OptimizedIcons.Tools) {
+            SettingsSectionCard(title = "Processing & Storage", icon = OptimizedIcons.Tools) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Auto-Save to Device Gallery", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Instantly index optimized videos in Photos & Gallery apps (Movies/Optimized)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = autoSaveToGallery,
+                            onCheckedChange = { viewModel.preferences.setAutoSaveToGallery(it) }
+                        )
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,

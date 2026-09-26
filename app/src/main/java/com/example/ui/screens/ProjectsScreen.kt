@@ -59,6 +59,7 @@ fun ProjectsScreen(
 ) {
     val context = LocalContext.current
     val allProjects by viewModel.allProjects.collectAsState()
+    val compact = com.example.ui.util.LocalCompactConfig.current
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredProjects = allProjects.filter {
@@ -69,14 +70,14 @@ fun ProjectsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Projects",
-                style = MaterialTheme.typography.headlineMedium,
+                style = if (compact.isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -197,7 +198,22 @@ fun ProjectsScreen(
                         }
 
                         // Actions
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = {
+                                    project.exportPath?.let { path ->
+                                        val f = File(path)
+                                        if (f.exists()) {
+                                            viewModel.saveVideoToDeviceGallery(f, project.destinationPlatform)
+                                            android.widget.Toast.makeText(context, "Saved to device Gallery (Movies/Optimized)!", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(imageVector = OptimizedIcons.Storage, contentDescription = "Save to Gallery", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            }
+
                             IconButton(
                                 onClick = {
                                     project.exportPath?.let { path ->
@@ -205,9 +221,9 @@ fun ProjectsScreen(
                                         if (f.exists()) ShareHelper.openVideo(context, f)
                                     }
                                 },
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
-                                Icon(imageVector = OptimizedIcons.Play, contentDescription = "Play", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                Icon(imageVector = OptimizedIcons.Play, contentDescription = "Play", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                             }
 
                             IconButton(
@@ -217,14 +233,14 @@ fun ProjectsScreen(
                                         if (f.exists()) ShareHelper.shareVideo(context, f)
                                     }
                                 },
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(imageVector = OptimizedIcons.Share, contentDescription = "Share", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                             }
 
                             IconButton(
                                 onClick = { viewModel.deleteProject(project.id) },
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(imageVector = OptimizedIcons.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
                             }

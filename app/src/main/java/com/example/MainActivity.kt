@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,7 +47,9 @@ import com.example.ui.screens.ProjectsScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.ToolsScreen
 import com.example.ui.theme.OptimizedTheme
+import com.example.ui.util.LocalCompactConfig
 import com.example.ui.util.PermissionHelper
+import com.example.ui.util.rememberCompactConfig
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.SubScreen
 
@@ -64,6 +67,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeStyle by viewModel.themeStyle.collectAsState()
             val keepAwake by viewModel.preferences.keepScreenAwake.collectAsState()
+            val compactMode by viewModel.preferences.compactMode.collectAsState()
+            val autoCompact by viewModel.preferences.autoCompactOnSmallScreens.collectAsState()
+            val compactConfig = rememberCompactConfig(forceCompact = compactMode, autoDetectSmallScreen = autoCompact)
 
             LaunchedEffect(keepAwake) {
                 if (keepAwake) {
@@ -74,7 +80,9 @@ class MainActivity : ComponentActivity() {
             }
 
             OptimizedTheme(themeStyle = themeStyle) {
-                MainContent(viewModel = viewModel)
+                CompositionLocalProvider(LocalCompactConfig provides compactConfig) {
+                    MainContent(viewModel = viewModel)
+                }
             }
         }
     }

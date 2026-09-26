@@ -126,6 +126,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    // Gallery Save Feedback
+    private val _gallerySaveStatus = MutableStateFlow<String?>(null)
+    val gallerySaveStatus: StateFlow<String?> = _gallerySaveStatus.asStateFlow()
+
+    fun saveVideoToDeviceGallery(file: File, customTitle: String? = null) {
+        viewModelScope.launch {
+            _gallerySaveStatus.value = "Saving to Gallery..."
+            val result = StorageManager.saveVideoToGallery(getApplication(), file, customTitle)
+            result.onSuccess { uri ->
+                _gallerySaveStatus.value = "Saved to Gallery (Movies/Optimized) ✓"
+                val current = _exportStage.value
+                if (current is ExportStage.Completed) {
+                    _exportStage.value = current.copy(galleryUri = uri.toString())
+                }
+            }.onFailure { err ->
+                _gallerySaveStatus.value = "Failed to save: ${err.message}"
+            }
+        }
+    }
+
+    fun clearGallerySaveStatus() {
+        _gallerySaveStatus.value = null
+    }
+
     init {
         refreshStorageStats()
     }
@@ -209,12 +233,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         isCancelled = false
         _currentSubScreen.value = SubScreen.EXPORT_PROGRESS
 
+        val autoSave = preferences.autoSaveToGallery.value
+        val effectivePlan = plan.copy(exportSettings = plan.exportSettings.copy(saveToGalleryOnCompletion = autoSave))
+
         exportJob?.cancel()
         exportJob = viewModelScope.launch {
             val result = VideoTranscoder.transcode(
                 context = getApplication(),
                 sourceUri = sourceUri,
-                plan = plan,
+                plan = effectivePlan,
                 onProgress = { stage -> _exportStage.value = stage },
                 isCancelled = { isCancelled }
             )

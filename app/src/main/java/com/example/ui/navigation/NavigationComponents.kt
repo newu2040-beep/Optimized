@@ -52,21 +52,26 @@ fun FloatingBottomBar(
     onScreenSelected: (Screen) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val compact = com.example.ui.util.LocalCompactConfig.current
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(
+                horizontal = if (compact.isCompact) 10.dp else 20.dp,
+                vertical = if (compact.isCompact) 6.dp else 12.dp
+            ),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             modifier = Modifier
                 .shadow(
-                    elevation = 16.dp,
-                    shape = RoundedCornerShape(32.dp),
+                    elevation = if (compact.isCompact) 10.dp else 16.dp,
+                    shape = RoundedCornerShape(28.dp),
                     spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                     ambientColor = Color.Black.copy(alpha = 0.2f)
                 ),
-            shape = RoundedCornerShape(32.dp),
+            shape = RoundedCornerShape(28.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
             tonalElevation = 6.dp,
             border = androidx.compose.foundation.BorderStroke(
@@ -76,7 +81,10 @@ fun FloatingBottomBar(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(
+                        horizontal = if (compact.isCompact) 4.dp else 8.dp,
+                        vertical = if (compact.isCompact) 4.dp else 6.dp
+                    ),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -97,7 +105,7 @@ fun FloatingBottomBar(
                     Box(
                         modifier = Modifier
                             .testTag("nav_${screen.route}")
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(pillBgColor)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -105,7 +113,10 @@ fun FloatingBottomBar(
                             ) {
                                 onScreenSelected(screen)
                             }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(
+                                horizontal = if (compact.isCompact) 8.dp else 12.dp,
+                                vertical = if (compact.isCompact) 4.dp else 8.dp
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -116,12 +127,12 @@ fun FloatingBottomBar(
                                 imageVector = screen.icon,
                                 contentDescription = screen.title,
                                 tint = iconColor,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(if (compact.isCompact) 18.dp else 22.dp)
                             )
                             Text(
                                 text = screen.title,
                                 color = iconColor,
-                                fontSize = 10.sp,
+                                fontSize = if (compact.isCompact) 9.sp else 10.sp,
                                 fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium,
                                 modifier = Modifier.padding(top = 2.dp)
                             )

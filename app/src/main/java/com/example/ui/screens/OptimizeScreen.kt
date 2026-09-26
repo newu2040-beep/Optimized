@@ -93,11 +93,13 @@ fun OptimizeScreen(
     val currentMetadata = metadata!!
     val currentPlan = plan!!
 
+    val compact = com.example.ui.util.LocalCompactConfig.current
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         // TOP APP BAR
         item {
@@ -382,7 +384,7 @@ fun OptimizeScreen(
         // QUALITY MODES
         item {
             Text(
-                text = "Quality Mode",
+                text = "Optimization Quality & Targets",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -390,16 +392,15 @@ fun OptimizeScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            androidx.compose.foundation.lazy.LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                QualityMode.values().forEach { mode ->
+                items(QualityMode.values()) { mode ->
                     val isSelected = settings.qualityMode == mode
                     Card(
                         modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable {
                                 val updated = settings.copy(
                                     qualityMode = mode,
@@ -407,9 +408,9 @@ fun OptimizeScreen(
                                 )
                                 viewModel.updateSettings(updated)
                             },
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ),
                         border = androidx.compose.foundation.BorderStroke(
                             1.dp,
@@ -418,15 +419,14 @@ fun OptimizeScreen(
                     ) {
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp, horizontal = 6.dp),
+                                .padding(vertical = 10.dp, horizontal = 14.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = mode.displayName,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1
                             )
                         }

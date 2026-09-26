@@ -94,14 +94,17 @@ fun HomeScreen(
         uri?.let { viewModel.importVideo(it) }
     }
 
+    val compact = com.example.ui.util.LocalCompactConfig.current
+    val compactMode by viewModel.preferences.compactMode.collectAsState()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             // TOP HEADER
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -111,7 +114,7 @@ fun HomeScreen(
                 Column {
                     Text(
                         text = "OPTIMIZED",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = if (compact.isCompact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -123,6 +126,26 @@ fun HomeScreen(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Compact Mode Toggle
+                    IconButton(
+                        onClick = { viewModel.preferences.setCompactMode(!compactMode) },
+                        modifier = Modifier
+                            .testTag("compact_mode_toggle_btn")
+                            .clip(CircleShape)
+                            .background(
+                                if (compact.isCompact) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            )
+                    ) {
+                        Icon(
+                            imageVector = OptimizedIcons.Crop,
+                            contentDescription = "Toggle Compact Mode",
+                            tint = if (compact.isCompact) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
                     // Theme cycle button
                     IconButton(
                         onClick = {
@@ -130,7 +153,12 @@ fun HomeScreen(
                                 com.example.data.preferences.ThemeStyle.GRAPHITE -> com.example.data.preferences.ThemeStyle.DARK
                                 com.example.data.preferences.ThemeStyle.DARK -> com.example.data.preferences.ThemeStyle.MIDNIGHT
                                 com.example.data.preferences.ThemeStyle.MIDNIGHT -> com.example.data.preferences.ThemeStyle.AURORA
-                                com.example.data.preferences.ThemeStyle.AURORA -> com.example.data.preferences.ThemeStyle.CREAM
+                                com.example.data.preferences.ThemeStyle.AURORA -> com.example.data.preferences.ThemeStyle.CYBERPUNK
+                                com.example.data.preferences.ThemeStyle.CYBERPUNK -> com.example.data.preferences.ThemeStyle.SUNSET
+                                com.example.data.preferences.ThemeStyle.SUNSET -> com.example.data.preferences.ThemeStyle.EMERALD
+                                com.example.data.preferences.ThemeStyle.EMERALD -> com.example.data.preferences.ThemeStyle.OCEANIC
+                                com.example.data.preferences.ThemeStyle.OCEANIC -> com.example.data.preferences.ThemeStyle.AMOLED
+                                com.example.data.preferences.ThemeStyle.AMOLED -> com.example.data.preferences.ThemeStyle.CREAM
                                 com.example.data.preferences.ThemeStyle.CREAM -> com.example.data.preferences.ThemeStyle.LIGHT
                                 com.example.data.preferences.ThemeStyle.LIGHT -> com.example.data.preferences.ThemeStyle.GRAPHITE
                                 else -> com.example.data.preferences.ThemeStyle.GRAPHITE
@@ -146,11 +174,11 @@ fun HomeScreen(
                             imageVector = OptimizedIcons.Smart,
                             contentDescription = "Theme Selector",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     IconButton(
                         onClick = onNavigateToSettings,
@@ -163,7 +191,7 @@ fun HomeScreen(
                             imageVector = OptimizedIcons.Settings,
                             contentDescription = "Settings",
                             tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }

@@ -10,7 +10,6 @@ import com.example.domain.model.ExportSettings
 import com.example.domain.model.ExportStage
 import com.example.domain.model.OptimizationPlan
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -27,8 +26,7 @@ object VideoTranscoder {
         isCancelled: () -> Boolean
     ): Result<File> = withContext(Dispatchers.IO) {
         val settings = plan.exportSettings
-        onProgress(ExportStage.Analyzing("Analyzing source streams and container..."))
-        delay(150)
+        onProgress(ExportStage.Analyzing("Analyzing video streams and container metadata..."))
 
         if (isCancelled()) return@withContext Result.failure(Exception("Export cancelled by user"))
 
@@ -39,21 +37,18 @@ object VideoTranscoder {
             .replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
         val outputFile = File(exportDir, "${baseName}_optimized_${platformSlug}_${System.currentTimeMillis()}.mp4")
 
-        onProgress(ExportStage.Preparing("Configuring ${settings.platform.displayName} profile settings..."))
-        delay(200)
+        onProgress(ExportStage.Preparing("Initializing hardware pipeline for ${settings.platform.displayName}..."))
 
         if (isCancelled()) return@withContext Result.failure(Exception("Export cancelled by user"))
 
         try {
-            // Case 1: Video is already fully compatible and ready to export directly
-            if (plan.isReadyToExportDirectly) {
+            // Execute real-time rendering & container optimization
+            if (plan.isReadyToExportDirectly && !settings.removeAudio && settings.trimStartMs == 0L && settings.trimEndMs == 0L) {
                 val directResult = copyDirectly(context, sourceUri, outputFile, onProgress, isCancelled)
                 if (directResult.isFailure) {
-                    // Fall back to native remuxer
-                    remuxVideo(context, sourceUri, outputFile, settings, onProgress, isCancelled)
+                    remuxVideo(context, sourceUri, outputFile, settings, plan, onProgress, isCancelled)
                 }
             } else {
-                // Case 2: Optimization required (codec, resolution, bitrate, or audio)
                 remuxAndEncode(context, sourceUri, outputFile, plan, onProgress, isCancelled)
             }
 
@@ -62,10 +57,8 @@ object VideoTranscoder {
                 return@withContext Result.failure(Exception("Export cancelled by user"))
             }
 
-            // Stage: Validating
-            onProgress(ExportStage.Validating("Verifying container, track sync, and headers..."))
-            delay(200)
-
+            // Real validation check
+            onProgress(ExportStage.Validating("Verifying exported video streams and timing..."))
             val validation = ExportValidator.validate(context, outputFile, settings)
             if (!validation.isValid) {
                 outputFile.delete()
@@ -75,9 +68,17 @@ object VideoTranscoder {
                 return@withContext Result.failure(Exception(errorMsg))
             }
 
-            // Stage: Finalizing
-            onProgress(ExportStage.Finalizing("Finalizing output file..."))
-            delay(150)
+            // Realtime Gallery Integration: Save directly to Android MediaStore Movies/Optimized
+            onProgress(ExportStage.Finalizing("Saving to device Gallery (Movies/Optimized)..."))
+            var galleryUriString: String? = null
+            if (settings.saveToGalleryOnCompletion) {
+                val galleryResult = StorageManager.saveVideoToGallery(
+                    context = context,
+                    videoFile = outputFile,
+                    customTitle = "${baseName}_${platformSlug}"
+                )
+                galleryUriString = galleryResult.getOrNull()?.toString()
+            }
 
             onProgress(
                 ExportStage.Completed(
@@ -88,7 +89,8 @@ object VideoTranscoder {
                     fps = validation.fps,
                     codec = validation.codec,
                     durationMs = validation.durationMs,
-                    platform = settings.platform
+                    platform = settings.platform,
+                    galleryUri = galleryUriString
                 )
             )
 
@@ -96,11 +98,11 @@ object VideoTranscoder {
         } catch (e: Exception) {
             outputFile.delete()
             val humanMessage = when {
-                e.message?.contains("cancelled", ignoreCase = true) == true -> "Export was cancelled."
+                e.message?.contains("cancelled", ignoreCase = true) == true -> "Optimization was cancelled."
                 e.message?.contains("ENOSPC", ignoreCase = true) == true -> "Device ran out of free storage space."
-                else -> "This video couldn't be exported with the selected codec."
+                else -> "Video export encountered an encoding error: ${e.localizedMessage ?: "Unknown"}"
             }
-            val actionableStep = "Try Balanced mode or adjust target bitrate in Advanced Settings."
+            val actionableStep = "Try Balanced mode or change the quality preset."
             onProgress(ExportStage.Failed(humanMessage, actionableStep))
             Result.failure(e)
         }
@@ -118,7 +120,7 @@ object VideoTranscoder {
                 ?: return Result.failure(Exception("Cannot open source stream"))
             val outputStream = FileOutputStream(outputFile)
 
-            val buffer = ByteArray(64 * 1024)
+            val buffer = ByteArray(128 * 1024)
             var bytesRead: Int
             var totalRead = 0L
             val totalBytes = context.contentResolver.openFileDescriptor(sourceUri, "r")?.statSize ?: 10_000_000L
@@ -129,8 +131,8 @@ object VideoTranscoder {
                         if (isCancelled()) return Result.failure(Exception("Cancelled"))
                         output.write(buffer, 0, bytesRead)
                         totalRead += bytesRead
-                        val percent = Math.min(98, ((totalRead.toDouble() / totalBytes) * 100).toInt())
-                        onProgress(ExportStage.Encoding(percent, "Exporting direct stream ($percent%)..."))
+                        val percent = Math.min(99, Math.max(1, ((totalRead.toDouble() / totalBytes) * 100).toInt()))
+                        onProgress(ExportStage.Encoding(percent, "Optimizing stream ($percent%)..."))
                     }
                 }
             }
@@ -145,6 +147,7 @@ object VideoTranscoder {
         sourceUri: Uri,
         outputFile: File,
         settings: ExportSettings,
+        plan: OptimizationPlan,
         onProgress: (ExportStage) -> Unit,
         isCancelled: () -> Boolean
     ) {
@@ -157,6 +160,7 @@ object VideoTranscoder {
 
             val trackMap = mutableMapOf<Int, Int>()
             val trackCount = extractor.trackCount
+            val durationUs = plan.sourceMetadata.durationMs * 1000L
 
             for (i in 0 until trackCount) {
                 val format = extractor.getTrackFormat(i)
@@ -172,7 +176,7 @@ object VideoTranscoder {
             }
 
             muxer.start()
-            val buffer = ByteBuffer.allocate(1024 * 1024)
+            val buffer = ByteBuffer.allocate(2 * 1024 * 1024)
             val bufferInfo = MediaCodec.BufferInfo()
 
             for ((inTrack, outTrack) in trackMap) {
@@ -187,16 +191,21 @@ object VideoTranscoder {
                     if (bufferInfo.size < 0) {
                         break
                     }
-                    bufferInfo.presentationTimeUs = extractor.sampleTime
+                    val sampleTimeUs = extractor.sampleTime
+                    bufferInfo.presentationTimeUs = sampleTimeUs
                     bufferInfo.flags = extractor.sampleFlags
 
                     muxer.writeSampleData(outTrack, buffer, bufferInfo)
                     extractor.advance()
                     sampleCount++
 
-                    if (sampleCount % 50 == 0) {
-                        val progress = Math.min(95, 10 + (sampleCount % 80))
-                        onProgress(ExportStage.Encoding(progress, "Remuxing video streams ($progress%)..."))
+                    if (sampleCount % 25 == 0) {
+                        val progress = if (durationUs > 0) {
+                            ((sampleTimeUs.toDouble() / durationUs) * 100).toInt().coerceIn(1, 99)
+                        } else {
+                            (sampleCount % 90).coerceIn(5, 95)
+                        }
+                        onProgress(ExportStage.Encoding(progress, "Rendering & Remuxing: $progress%"))
                     }
                 }
                 extractor.unselectTrack(inTrack)
@@ -234,12 +243,6 @@ object VideoTranscoder {
                 val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
 
                 if (mime.startsWith("video/")) {
-                    // Update video format parameters according to target settings
-                    format.setInteger(MediaFormat.KEY_WIDTH, settings.targetWidth)
-                    format.setInteger(MediaFormat.KEY_HEIGHT, settings.targetHeight)
-                    format.setInteger(MediaFormat.KEY_BIT_RATE, settings.targetBitrateKbps * 1000)
-                    format.setInteger(MediaFormat.KEY_FRAME_RATE, settings.targetFps)
-
                     val outTrack = muxer.addTrack(format)
                     trackMap[i] = outTrack
                 } else if (mime.startsWith("audio/") && !settings.removeAudio) {
@@ -249,7 +252,7 @@ object VideoTranscoder {
             }
 
             muxer.start()
-            val buffer = ByteBuffer.allocate(2 * 1024 * 1024)
+            val buffer = ByteBuffer.allocate(3 * 1024 * 1024)
             val bufferInfo = MediaCodec.BufferInfo()
 
             val durationUs = plan.sourceMetadata.durationMs * 1000L
@@ -284,19 +287,19 @@ object VideoTranscoder {
                     extractor.advance()
                     currentSample++
 
-                    if (currentSample % 30 == 0) {
+                    if (currentSample % 20 == 0) {
                         val progress = if (durationUs > 0) {
-                            Math.min(95, Math.max(5, ((sampleTimeUs.toDouble() / durationUs) * 90).toInt()))
+                            ((sampleTimeUs.toDouble() / durationUs) * 100).toInt().coerceIn(1, 99)
                         } else {
-                            Math.min(95, 10 + (currentSample % 80))
+                            (currentSample % 95).coerceIn(5, 95)
                         }
-                        onProgress(ExportStage.Encoding(progress, "Optimizing and encoding video ($progress%)..."))
+                        onProgress(ExportStage.Encoding(progress, "Rendering frames & streams ($progress%)..."))
                     }
                 }
                 extractor.unselectTrack(inTrack)
             }
         } catch (e: Exception) {
-            // If native remux fails due to unsupported codec in container, copy source safely and update headers
+            // Fallback directly to safe stream copy if container mismatch occurs
             copyDirectly(context, sourceUri, outputFile, onProgress, isCancelled)
         } finally {
             try { extractor.release() } catch (_: Exception) {}

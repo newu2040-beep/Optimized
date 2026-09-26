@@ -119,6 +119,96 @@ private val LightScheme = lightColorScheme(
     outline = LightBorder
 )
 
+private val CyberpunkScheme = darkColorScheme(
+    primary = CyberpunkAccent,
+    onPrimary = Color(0xFF1F0C3B),
+    primaryContainer = Color(0xFF381466),
+    onPrimaryContainer = Color(0xFFFFF7A8),
+    secondary = CyberpunkSecondary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFF4A1E86),
+    onSecondaryContainer = Color(0xFFF3C4FB),
+    background = CyberpunkBackground,
+    onBackground = CyberpunkTextPrimary,
+    surface = CyberpunkSurface,
+    onSurface = CyberpunkTextPrimary,
+    surfaceVariant = CyberpunkSurfaceVariant,
+    onSurfaceVariant = CyberpunkTextSecondary,
+    outline = CyberpunkBorder
+)
+
+private val SunsetScheme = darkColorScheme(
+    primary = SunsetAccent,
+    onPrimary = Color(0xFF2C0F00),
+    primaryContainer = Color(0xFF5D2504),
+    onPrimaryContainer = Color(0xFFFFDBCF),
+    secondary = SunsetSecondary,
+    onSecondary = Color(0xFF3A1C00),
+    secondaryContainer = Color(0xFF452E6A),
+    onSecondaryContainer = Color(0xFFFFE0B2),
+    background = SunsetBackground,
+    onBackground = SunsetTextPrimary,
+    surface = SunsetSurface,
+    onSurface = SunsetTextPrimary,
+    surfaceVariant = SunsetSurfaceVariant,
+    onSurfaceVariant = SunsetTextSecondary,
+    outline = SunsetBorder
+)
+
+private val EmeraldScheme = darkColorScheme(
+    primary = EmeraldAccent,
+    onPrimary = Color(0xFF00391A),
+    primaryContainer = Color(0xFF005327),
+    onPrimaryContainer = Color(0xFF7DFFAB),
+    secondary = EmeraldSecondary,
+    onSecondary = Color(0xFF00381B),
+    secondaryContainer = Color(0xFF102E1B),
+    onSecondaryContainer = Color(0xFFA5D6A7),
+    background = EmeraldBackground,
+    onBackground = EmeraldTextPrimary,
+    surface = EmeraldSurface,
+    onSurface = EmeraldTextPrimary,
+    surfaceVariant = EmeraldSurfaceVariant,
+    onSurfaceVariant = EmeraldTextSecondary,
+    outline = EmeraldBorder
+)
+
+private val OceanicScheme = darkColorScheme(
+    primary = OceanicAccent,
+    onPrimary = Color(0xFF00363D),
+    primaryContainer = Color(0xFF004E59),
+    onPrimaryContainer = Color(0xFF9CF4FF),
+    secondary = OceanicSecondary,
+    onSecondary = Color(0xFF00363F),
+    secondaryContainer = Color(0xFF0F2D4A),
+    onSecondaryContainer = Color(0xFF80DEEA),
+    background = OceanicBackground,
+    onBackground = OceanicTextPrimary,
+    surface = OceanicSurface,
+    onSurface = OceanicTextPrimary,
+    surfaceVariant = OceanicSurfaceVariant,
+    onSurfaceVariant = OceanicTextSecondary,
+    outline = OceanicBorder
+)
+
+private val AmoledScheme = darkColorScheme(
+    primary = AmoledAccent,
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF0C2738),
+    onPrimaryContainer = Color(0xFFBAE6FD),
+    secondary = AmoledSecondary,
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF1E1E1E),
+    onSecondaryContainer = Color(0xFFE0E0E0),
+    background = AmoledBackground,
+    onBackground = AmoledTextPrimary,
+    surface = AmoledSurface,
+    onSurface = AmoledTextPrimary,
+    surfaceVariant = AmoledSurfaceVariant,
+    onSurfaceVariant = AmoledTextSecondary,
+    outline = AmoledBorder
+)
+
 @Composable
 fun OptimizedTheme(
     themeStyle: ThemeStyle = ThemeStyle.GRAPHITE,
@@ -133,6 +223,11 @@ fun OptimizedTheme(
         ThemeStyle.CREAM -> CreamScheme
         ThemeStyle.MIDNIGHT -> MidnightScheme
         ThemeStyle.AURORA -> AuroraScheme
+        ThemeStyle.CYBERPUNK -> CyberpunkScheme
+        ThemeStyle.SUNSET -> SunsetScheme
+        ThemeStyle.EMERALD -> EmeraldScheme
+        ThemeStyle.OCEANIC -> OceanicScheme
+        ThemeStyle.AMOLED -> AmoledScheme
     }
 
     MaterialTheme(

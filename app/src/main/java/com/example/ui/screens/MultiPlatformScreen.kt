@@ -55,6 +55,7 @@ fun MultiPlatformScreen(
 ) {
     BackHandler { onBack() }
     val context = LocalContext.current
+    val compact = com.example.ui.util.LocalCompactConfig.current
     val queue by viewModel.multiPlatformQueue.collectAsState()
     val metadata by viewModel.activeMetadata.collectAsState()
 
@@ -64,8 +65,8 @@ fun MultiPlatformScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = compact.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(compact.sectionSpacing)
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
@@ -87,7 +88,7 @@ fun MultiPlatformScreen(
                 Column {
                     Text(
                         text = "MULTI-PLATFORM EXPORT",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = if (compact.isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -132,36 +133,63 @@ fun MultiPlatformScreen(
 
         // Platforms Queue
         items(queue, key = { it.platform.id }) { item ->
-            QueueItemCard(item = item, context = context)
+            QueueItemCard(
+                item = item,
+                context = context,
+                onSaveToGallery = { file ->
+                    viewModel.saveVideoToDeviceGallery(file, item.platform.displayName)
+                    android.widget.Toast.makeText(context, "Saved to Gallery (Movies/Optimized)!", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            )
         }
 
         // Bottom Actions (Share All / Save All)
         if (allDone) {
             item {
                 Spacer(modifier = Modifier.height(10.dp))
+
                 Button(
+                    onClick = {
+                        completedFiles.forEach { f ->
+                            viewModel.saveVideoToDeviceGallery(f)
+                        }
+                        android.widget.Toast.makeText(context, "Saved all ${completedFiles.size} videos to device Gallery (Movies/Optimized)!", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(compact.primaryButtonHeight),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(imageVector = OptimizedIcons.Storage, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Save All to Gallery / Device", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
                     onClick = {
                         ShareHelper.shareMultipleVideos(context, completedFiles)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        .height(compact.secondaryButtonHeight),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Icon(imageVector = OptimizedIcons.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Share All (${completedFiles.size} Videos)", fontWeight = FontWeight.Bold)
+                    Text("Share All (${completedFiles.size} Videos)", fontWeight = FontWeight.SemiBold)
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedButton(
                     onClick = onBack,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(24.dp)
+                        .height(compact.secondaryButtonHeight),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Text("Done")
                 }
@@ -175,7 +203,11 @@ fun MultiPlatformScreen(
 }
 
 @Composable
-private fun QueueItemCard(item: MultiPlatformItem, context: Context) {
+private fun QueueItemCard(
+    item: MultiPlatformItem,
+    context: Context,
+    onSaveToGallery: ((java.io.File) -> Unit)? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -213,18 +245,44 @@ private fun QueueItemCard(item: MultiPlatformItem, context: Context) {
 
                 when (item.stage) {
                     "Complete" -> {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF00E676).copy(alpha = 0.15f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "Complete",
-                                color = Color(0xFF00E676),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (item.outputFile != null && onSaveToGallery != null) {
+                                IconButton(
+                                    onClick = { onSaveToGallery(item.outputFile) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = OptimizedIcons.Storage,
+                                        contentDescription = "Save to Gallery",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { ShareHelper.openVideo(context, item.outputFile) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = OptimizedIcons.Play,
+                                        contentDescription = "Play",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF00E676).copy(alpha = 0.15f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Ready",
+                                    color = Color(0xFF00E676),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                     "Optimizing" -> {

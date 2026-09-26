@@ -136,4 +136,23 @@ class ExampleUnitTest {
         assertTrue(allGranted.hasAllGranted)
         assertEquals(3, allGranted.grantedCount)
     }
+
+    @Test
+    fun testQualityModeMultipliers() {
+        assertTrue(QualityMode.ULTRA_COMPRESSION.bitrateMultiplier < QualityMode.BALANCED.bitrateMultiplier)
+        assertTrue(QualityMode.DISCORD_LIMIT.bitrateMultiplier < QualityMode.BALANCED.bitrateMultiplier)
+        assertTrue(QualityMode.WHATSAPP_LIMIT.bitrateMultiplier < QualityMode.BALANCED.bitrateMultiplier)
+        assertTrue(QualityMode.PRO_CINEMA.bitrateMultiplier > QualityMode.MAXIMUM_QUALITY.bitrateMultiplier)
+    }
+
+    @Test
+    fun testExpandedThemes() {
+        val themes = com.example.data.preferences.ThemeStyle.values()
+        assertTrue(themes.size >= 12)
+        assertTrue(themes.contains(com.example.data.preferences.ThemeStyle.CYBERPUNK))
+        assertTrue(themes.contains(com.example.data.preferences.ThemeStyle.SUNSET))
+        assertTrue(themes.contains(com.example.data.preferences.ThemeStyle.EMERALD))
+        assertTrue(themes.contains(com.example.data.preferences.ThemeStyle.OCEANIC))
+        assertTrue(themes.contains(com.example.data.preferences.ThemeStyle.AMOLED))
+    }
 }
