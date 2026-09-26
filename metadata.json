@@ -1,0 +1,6 @@
+{
+  "name": "OPTIMIZED",
+  "description": "Professional vertical-video optimization, compression, conversion, analysis, and export utility for creators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,63 @@
+package com.example.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Primary Brand Accents
+val AccentCyan = Color(0xFF00E5FF)
+val AccentCobalt = Color(0xFF2979FF)
+val AccentEmerald = Color(0xFF00E676)
+val AccentAmber = Color(0xFFFFB300)
+val AccentCoral = Color(0xFFFF5252)
+
+// Dark Theme (Deep neutral black with elevated charcoal surfaces)
+val DarkBackground = Color(0xFF0D1117)
+val DarkSurface = Color(0xFF161B22)
+val DarkSurfaceVariant = Color(0xFF21262D)
+val DarkBorder = Color(0xFF30363D)
+val DarkTextPrimary = Color(0xFFF0F6FC)
+val DarkTextSecondary = Color(0xFF8B949E)
+
+// Graphite Theme (Sophisticated zinc/gray)
+val GraphiteBackground = Color(0xFF121316)
+val GraphiteSurface = Color(0xFF1C1D22)
+val GraphiteSurfaceVariant = Color(0xFF262830)
+val GraphiteBorder = Color(0xFF363945)
+val GraphiteTextPrimary = Color(0xFFF4F4F5)
+val GraphiteTextSecondary = Color(0xFFA1A1AA)
+val GraphiteAccent = Color(0xFF38BDF8)
+
+// Midnight Theme (Deep oceanic blue-black)
+val MidnightBackground = Color(0xFF060913)
+val MidnightSurface = Color(0xFF0F172A)
+val MidnightSurfaceVariant = Color(0xFF1E293B)
+val MidnightBorder = Color(0xFF334155)
+val MidnightTextPrimary = Color(0xFFF8FAFC)
+val MidnightTextSecondary = Color(0xFF94A3B8)
+val MidnightAccent = Color(0xFF60A5FA)
+
+// Aurora Theme (Muted dark slate with subtle cyan/teal)
+val AuroraBackground = Color(0xFF081214)
+val AuroraSurface = Color(0xFF0E1F24)
+val AuroraSurfaceVariant = Color(0xFF162E35)
+val AuroraBorder = Color(0xFF20424C)
+val AuroraTextPrimary = Color(0xFFECFEFF)
+val AuroraTextSecondary = Color(0xFF6EE7B7)
+val AuroraAccent = Color(0xFF2DD4BF)
+
+// Cream Theme (Warm minimalist luxury)
+val CreamBackground = Color(0xFFF9F7F2)
+val CreamSurface = Color(0xFFFFFFFF)
+val CreamSurfaceVariant = Color(0xFFEFECE6)
+val CreamBorder = Color(0xFFDDD8CE)
+val CreamTextPrimary = Color(0xFF1C1917)
+val CreamTextSecondary = Color(0xFF78716C)
+val CreamAccent = Color(0xFFB45309)
+
+// Light Theme (Clean modern neutral light)
+val LightBackground = Color(0xFFF8FAFC)
+val LightSurface = Color(0xFFFFFFFF)
+val LightSurfaceVariant = Color(0xFFF1F5F9)
+val LightBorder = Color(0xFFE2E8F0)
+val LightTextPrimary = Color(0xFF0F172A)
+val LightTextSecondary = Color(0xFF64748B)
+val LightAccent = Color(0xFF0284C7)
